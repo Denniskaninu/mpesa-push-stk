@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Pesa Payment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4 sm:p-6 font-sans">
+    <div class="bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md animate-slide-up">
+        <!-- M-Pesa Logo Placeholder (Replace with actual logo) -->
+        <div class="flex justify-center mb-6">
+            <img src="https://pbs.twimg.com/ext_tw_video_thumb/1181852139011936256/pu/img/1UCUl2bSj2RCyq6H.jpg" alt="M-Pesa Logo" class="h-10">
+        </div>
+
+        <h1 class="text-2xl font-bold text-center text-white mb-6">M-Pesa Payment</h1>
+
+        <form id="paymentForm" class="space-y-6">
+            <div>
+                <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
+                <input type="text" id="phone" name="phone" placeholder="Enter phone number" required
+                    class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-700 text-white transition-all duration-200">
+            </div>
+
+            <div>
+                <label for="amount" class="block text-sm font-medium text-gray-300 mb-1">Amount (KSH)</label>
+                <input type="number" id="amount" name="amount" min="1" max="70000" placeholder="Enter amount" required
+                    class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-700 text-white transition-all duration-200">
+            </div>
+
+            <button type="submit" id="payBtn"
+                class="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 relative">
+                <span id="payText">Pay with M-Pesa</span>
+                <div id="loading" class="absolute inset-0 flex items-center justify-center hidden">
+                    <div class="spinner"></div>
+                </div>
+            </button>
+
+            <div id="message" class="hidden p-4 rounded-lg text-sm font-medium text-center"></div>
+        </form>
+    </div>
+
+    <script>
+        // Phone number formatting
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.startsWith('254') && value.length > 3) {
+                value = value.replace(/^(254)(\d{3})(\d{3})(\d{3})/, '$1 $2 $3 $4');
+            } else if (value.startsWith('0') && value.length > 1) {
+                value = value.replace(/^(0)(\d{3})(\d{3})(\d{3})/, '$1$2 $3 $4');
+            }
+            if (e.target.value.replace(/\s/g, '').length === value.replace(/\s/g, '').length) {
+                e.target.value = value;
+            }
+        });
+
+        // Form submission
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const phone = document.getElementById('phone').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            const payBtn = document.getElementById('payBtn');
+            const payText = document.getElementById('payText');
+            const loading = document.getElementById('loading');
+            const message = document.getElementById('message');
+            const paymentForm = document.getElementById('paymentForm');
+
+            message.className = 'hidden';
+            if (!phone || !amount) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            if (parseFloat(amount) <= 0) {
+                showMessage('Amount must be greater than 0', 'error');
+                return;
+            }
+            if (parseFloat(amount) > 70000) {
+                showMessage('Amount cannot exceed 70,000 KSH', 'error');
+                return;
+            }
+
+            payBtn.disabled = true;
+            payText.className = 'opacity-0';
+            loading.className = 'absolute inset-0 flex items-center justify-center';
+            try {
+                const response = await fetch('/pay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, amount })
+                });
+                const data = await response.json();
+                showMessage(data.success ? `${data.message}\nCheck your phone for the M-Pesa prompt!` : `${data.message}`, data.success ? 'success' : 'error');
+                if (data.success) {
+                    paymentForm.reset(); // Clear form inputs on successful payment
+                }
+            } catch (error) {
+                showMessage('Network error. Please check your connection and try again.', 'error');
+            } finally {
+                payBtn.disabled = false;
+                payText.className = '';
+                loading.className = 'absolute inset-0 flex items-center justify-center hidden';
+            }
+        });
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `p-4 rounded-lg text-sm font-medium text-center ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            if (type === 'success') {
+                setTimeout(() => message.className = 'hidden', 10000);
+            }
+        }
+
+        // Amount input validation
+        document.getElementById('amount').addEventListener('input', function(e) {
+            const value = parseFloat(e.target.value);
+            const message = document.getElementById('message');
+            if (value > 70000) {
+                e.target.className = e.target.className.replace('border-gray-600', 'border-red-500');
+                showMessage('Amount cannot exceed 70,000 KSH (M-Pesa daily limit)', 'error');
+            } else {
+                e.target.className = e.target.className.replace('border-red-500', 'border-gray-600');
+                if (message.textContent.includes('daily limit')) {
+                    message.className = 'hidden';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
