@@ -335,7 +335,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: [Safaricom Developer Portal](https://developer.safaricom.co.ke)
 - **Issues**: Create an issue in this repository
-- **Email**: your-email@domain.com
 
 ## 🙏 Acknowledgments
 
