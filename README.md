@@ -193,25 +193,6 @@ ngrok http 5000
 # Update .env with ngrok URL
 CALLBACK_URL=https://abc123.ngrok.io/callback
 ```
-
-## 🏗️ Project Structure
-
-```
-mpesa-flask-integration/
-├── app.py                 # Main Flask application
-├── templates/
-│   └── index.html        # Payment interface
-├── static/               # Static assets (if any)
-├── requirements.txt      # Python dependencies
-├── .env.example         # Environment template
-├── .env                 # Your credentials (not in git)
-├── .gitignore          # Git ignore rules
-├── README.md           # This file
-└── logs/               # Application logs
-```
-
-## 🔒 Security Considerations
-
 ### Development
 - ✅ Use sandbox credentials
 - ✅ Test with small amounts
@@ -243,34 +224,6 @@ logger.error("API connection failed")
 - Console output during development
 - `logs/` directory for file logging
 - Configure external logging services for production
-
-## 🚀 Deployment
-
-### Using Docker (Recommended)
-
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-EXPOSE 5000
-
-CMD ["python", "app.py"]
-```
-
-### Using Heroku
-
-```bash
-# Create Procfile
-echo "web: python app.py" > Procfile
-
-# Deploy
-git add .
-git commit -m "Deploy to Heroku"
-git push heroku main
 ```
 
 ### Environment Variables for Production
