@@ -30,7 +30,7 @@ A robust, production-ready Flask application for integrating M-Pesa STK Push pay
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Denniskaninu/mpesa-push-stk.git
    cd mpesa-flask-integration
    ```
 
